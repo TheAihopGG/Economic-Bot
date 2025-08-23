@@ -2,12 +2,12 @@ from sqlalchemy.orm import mapped_column, Mapped
 from datetime import timedelta
 
 from .base import Base
+from .mixins import GuildIDMixin
 
 
-class GuildSettings(Base):
+class GuildSettings(Base, GuildIDMixin):
     __tablename__ = "guilds_settings"
-    id: Mapped[int] = mapped_column(primary_key=True, index=True)
-    guild_id: Mapped[int] = mapped_column(nullable=False, unique=True)
+    _is_unique = True
     shop_events_channel_id: Mapped[int] = mapped_column(nullable=True)
     reward_delay: Mapped[timedelta] = mapped_column(default=timedelta(seconds=10))
     reward_cost: Mapped[int] = mapped_column(nullable=False, default=100)

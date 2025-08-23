@@ -8,10 +8,11 @@ class IDMixin:
 
 
 class GuildIDMixin:
+    _is_unique = False
 
     @declared_attr
     def guild_id(cls) -> Mapped[int]:
-        return mapped_column(unique=True, nullable=False)
+        return mapped_column(unique=cls._is_unique, nullable=False)
 
 
 __all__ = ("IDMixin",)
