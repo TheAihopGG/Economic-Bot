@@ -6,6 +6,7 @@ from bot.core.configuration import BOT_TOKEN
 from bot.cogs.economic.cog import EconomicCog
 from bot.cogs.help.cog import HelpCog
 from bot.cogs.guild_settings.cog import GuildSettingsCog
+from bot.cogs.shop.cog import ShopCog
 
 bot = commands.InteractionBot(intents=Intents.default())
 [
@@ -14,6 +15,7 @@ bot = commands.InteractionBot(intents=Intents.default())
         EconomicCog(),
         HelpCog(),
         GuildSettingsCog(),
+        ShopCog(),
     }
 ]
 
