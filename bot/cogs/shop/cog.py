@@ -11,29 +11,46 @@ from .views import ConfirmPurchaseView
 
 class ShopCog(commands.Cog):
     @commands.slash_command()
-    async def shop(self, inter: AppCmdInter) -> None:
+    async def shop(self, inter: AppCmdInter, show_all: bool = False) -> None:
         if inter.guild:
             async with session_factory() as session:
                 guild_settings = await get_or_create_guild_settings(session, guild_id=inter.guild_id)
-                if guild_settings.is_shop_enabled:
-                    await inter.response.send_message(
-                        "\n".join(
-                            [
-                                f"<@&{shop_item.role_id}> - {shop_item.price} монет"
-                                async for shop_item in get_shop_items(
-                                    session,
-                                    guild_id=inter.guild_id,
-                                )
-                            ]
+                if not show_all:
+                    if guild_settings.is_shop_enabled:
+                        await inter.response.send_message(
+                            "\n".join(
+                                [
+                                    f"<@&{shop_item.role_id}> - {shop_item.price} монет"
+                                    async for shop_item in get_shop_items(
+                                        session,
+                                        guild_id=inter.guild_id,
+                                    )
+                                ]
+                            )
+                            or "Нету товаров",
+                            ephemeral=True,
                         )
-                        or "Нету товаров",
-                        ephemeral=True,
-                    )
+                    else:
+                        await inter.response.send_message(
+                            "Магазин выключен на этом сервере",
+                            ephemeral=True,
+                        )
                 else:
-                    await inter.response.send_message(
-                        "Магазин выключен на этом сервере",
-                        ephemeral=True,
-                    )
+                    if inter.author.guild_permissions.administrator:
+                        await inter.response.send_message(
+                            "\n".join(
+                                [
+                                    f"<@&{shop_item.role_id}> - {shop_item.price} монет"
+                                    async for shop_item in get_shop_items(
+                                        session,
+                                        guild_id=inter.guild_id,
+                                        return_all=True,
+                                    )
+                                ]
+                            )
+                            or "Нету товаров",
+                            ephemeral=True,
+                        )
 
     @commands.slash_command()
     async def add_shop_item(

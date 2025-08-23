@@ -25,6 +25,7 @@ async def get_shop_items(
     session: AsyncSession,
     *,
     guild_id: int,
+    return_all: bool = False,
 ) -> AsyncGenerator[ShopItem]:
     for item in (
         await session.execute(
@@ -33,8 +34,11 @@ async def get_shop_items(
             )
         )
     ).scalars():
-        if item.is_for_sell and (item.is_infinite or item.remaining > 0):
+        if return_all:
             yield item
+        else:
+            if item.is_for_sell and (item.is_infinite or item.remaining > 0):
+                yield item
 
 
 async def add_shop_item(
