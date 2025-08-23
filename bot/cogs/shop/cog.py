@@ -125,7 +125,7 @@ class ShopCog(commands.Cog):
                     ):
                         if not remaining is None:
                             if remaining < 0:
-                                await inter.response.send_message("remaining не может быть меньше нуля")
+                                return await inter.response.send_message("remaining не может быть меньше нуля")
                             else:
                                 shop_item.remaining = remaining
 
@@ -133,13 +133,13 @@ class ShopCog(commands.Cog):
                             if price > 1:
                                 shop_item.price = price
                             else:
-                                await inter.response.send_message("Цена должна быть больше 1 монеты")
+                                return await inter.response.send_message("Цена должна быть больше 1 монеты")
 
                         if not description is None:
                             if re.search("^[.]{0,200}$", description, re.S):
                                 shop_item.description = description
                             else:
-                                await inter.response.send_message("Описание может быть длиной от 0 до 200 символов")
+                                return await inter.response.send_message("Описание может быть длиной от 0 до 200 символов")
 
                         if not is_infinite is None:
                             shop_item.is_infinite = is_infinite
