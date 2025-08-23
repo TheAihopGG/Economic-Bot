@@ -7,6 +7,7 @@ from bot.cogs.economic.cog import EconomicCog
 from bot.cogs.help.cog import HelpCog
 from bot.cogs.guild_settings.cog import GuildSettingsCog
 from bot.cogs.shop.cog import ShopCog
+from bot.cogs.promocode.cog import PromocodesCog
 
 bot = commands.InteractionBot(intents=Intents.default())
 [
@@ -16,6 +17,7 @@ bot = commands.InteractionBot(intents=Intents.default())
         HelpCog(),
         GuildSettingsCog(),
         ShopCog(),
+        PromocodesCog(),
     }
 ]
 

@@ -8,7 +8,7 @@ from ...services.users import get_or_create_user_by_discord_id
 from ...services.guilds_settings import get_or_create_guild_settings
 
 
-class HelpCog(commands.Cog):
+class PromocodesCog(commands.Cog):
     @commands.slash_command()
     async def use(self, inter: AppCmdInter) -> None:
         pass
@@ -33,9 +33,10 @@ class HelpCog(commands.Cog):
                     "\n".join(
                         [f"{promocode.code} - {promocode.bonus}" async for promocode in get_promocodes(session, guild_id=inter.guild_id)],
                     )
+                    or "Нету промокодов",
                 )
 
-    @use.sub_command("promocode")
+    @use.sub_command()
     async def use_promocode(
         self,
         inter: AppCmdInter,
@@ -61,7 +62,7 @@ class HelpCog(commands.Cog):
                                     promocode=promocode,
                                     user=user,
                                 )
-                                await inter.response.send_message(f"Вы успешно использовали промокод {promocode.code}")
+                                await inter.response.send_message(f"Вы успешно использовали промокод")
                             else:
                                 await inter.response.send_message(f"У промокода уже максимально допустимое количество использований")
                         else:
@@ -71,7 +72,7 @@ class HelpCog(commands.Cog):
                 else:
                     await inter.response.send_message(f"Вы уже использовали промокод")
 
-    @add.sub_command("promocode")
+    @add.sub_command()
     async def add_promocode(
         self,
         inter: AppCmdInter,
@@ -85,7 +86,7 @@ class HelpCog(commands.Cog):
             if inter.author.guild_permissions.administrator:
                 if re.search("^[0-9a-zA-Zа-яА-ЯеЁ]{6,20}$", code):
                     if bonus > 0:
-                        if max_usages > 0:
+                        if is_infinite_usages or max_usages > 0:
                             async with session_factory() as session:
                                 await create_promocode(
                                     session,
@@ -106,7 +107,7 @@ class HelpCog(commands.Cog):
             else:
                 await inter.response.send_message("Недостаточно прав")
 
-    @add.sub_command("promocode")
+    @edit.sub_command()
     async def edit_promocode(
         self,
         inter: AppCmdInter,
@@ -149,7 +150,7 @@ class HelpCog(commands.Cog):
             else:
                 await inter.response.send_message("Недостаточно прав")
 
-    @remove.sub_command("promocode")
+    @remove.sub_command()
     async def remove_promocode(
         self,
         inter: AppCmdInter,
@@ -216,4 +217,4 @@ class HelpCog(commands.Cog):
                 await inter.response.send_message("Недостаточно прав")
 
 
-__all__ = ("HelpCog",)
+__all__ = ("PromocodesCog",)

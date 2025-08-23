@@ -2,10 +2,10 @@ from sqlalchemy.orm import mapped_column, Mapped
 from datetime import timedelta
 
 from .base import Base
-from .mixins import GuildIDMixin
+from .mixins import GuildIDMixin, IDMixin
 
 
-class GuildSettings(Base, GuildIDMixin):
+class GuildSettings(Base, GuildIDMixin, IDMixin):
     __tablename__ = "guilds_settings"
     _is_unique = True
     shop_events_channel_id: Mapped[int] = mapped_column(nullable=True)
