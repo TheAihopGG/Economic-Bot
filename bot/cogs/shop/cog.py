@@ -6,7 +6,20 @@ from ...services.shops import get_shop_items, add_shop_item, remove_shop_item, g
 from ...services.users import get_or_create_user_by_discord_id
 from ...services.guilds_settings import get_or_create_guild_settings
 from ...core.database import session_factory
+from ...core.embeds import NotEnoughPermissionsEmbed
 from .views import ConfirmPurchaseView
+from .embeds import (
+    ItemDescriptionMustIsToLongEmbed,
+    PriceMustBeMoreThanZeroEmbed,
+    RemainingCantBeLessThanZeroEmbed,
+    RoleWasAddedToShop,
+    RoleWasAlreadyAddedToShop,
+    RoleWasDeletedFromShopEmbed,
+    RoleWasNotFoundInShopEmbed,
+    ShopEmbed,
+    ShopIsDisabledEmbed,
+    ShopItemUpdatedEmbed,
+)
 
 
 class ShopCog(commands.Cog):
@@ -16,41 +29,31 @@ class ShopCog(commands.Cog):
             async with session_factory() as session:
                 guild_settings = await get_or_create_guild_settings(session, guild_id=inter.guild_id)
                 if not show_all:
+                    await session.refresh(guild_settings)
                     if guild_settings.is_shop_enabled:
                         await inter.response.send_message(
-                            "\n".join(
-                                [
-                                    f"<@&{shop_item.role_id}> - {shop_item.price} монет"
-                                    async for shop_item in get_shop_items(
-                                        session,
-                                        guild_id=inter.guild_id,
-                                    )
-                                ]
-                            )
-                            or "Нету товаров",
-                            ephemeral=True,
+                            embed=ShopEmbed(
+                                shop_items=await get_shop_items(
+                                    session,
+                                    guild_id=inter.guild_id,
+                                ),
+                            ),
                         )
                     else:
-                        await inter.response.send_message(
-                            "Магазин выключен на этом сервере",
-                            ephemeral=True,
-                        )
+                        await inter.response.send_message(embed=ShopIsDisabledEmbed(), ephemeral=True)
                 else:
                     if inter.author.guild_permissions.administrator:
                         await inter.response.send_message(
-                            "\n".join(
-                                [
-                                    f"<@&{shop_item.role_id}> - {shop_item.price} монет"
-                                    async for shop_item in get_shop_items(
-                                        session,
-                                        guild_id=inter.guild_id,
-                                        return_all=True,
-                                    )
-                                ]
-                            )
-                            or "Нету товаров",
-                            ephemeral=True,
+                            embed=ShopEmbed(
+                                shop_items=await get_shop_items(
+                                    session,
+                                    guild_id=inter.guild_id,
+                                    return_all=True,
+                                ),
+                            ),
                         )
+                    else:
+                        await inter.response.send_message(embed=NotEnoughPermissionsEmbed(), ephemeral=True)
 
     @commands.slash_command()
     async def add_shop_item(
@@ -63,7 +66,7 @@ class ShopCog(commands.Cog):
     ) -> None:
         if inter.guild:
             if inter.author.guild_permissions.administrator:
-                if price > 1:
+                if price > 0:
                     if is_infinite or remaining > -1:
                         async with session_factory() as session:
                             if await add_shop_item(
@@ -74,15 +77,15 @@ class ShopCog(commands.Cog):
                                 price=price,
                                 is_infinite=is_infinite,
                             ):
-                                await inter.response.send_message("Роль добавлена в магазин сервера")
+                                await inter.response.send_message(embed=RoleWasAddedToShop())
                             else:
-                                await inter.response.send_message("Эта роль уже добавлена в магазин сервера")
+                                await inter.response.send_message(embed=RoleWasAlreadyAddedToShop(), ephemeral=True)
                     else:
-                        await inter.response.send_message("remaining не может быть меньше нуля")
+                        await inter.response.send_message(embed=RemainingCantBeLessThanZeroEmbed(), ephemeral=True)
                 else:
-                    await inter.response.send_message("Цена должна быть больше 1 монеты")
+                    await inter.response.send_message(embed=PriceMustBeMoreThanZeroEmbed(), ephemeral=True)
             else:
-                await inter.response.send_message("Недостаточно прав")
+                await inter.response.send_message(embed=NotEnoughPermissionsEmbed(), ephemeral=True)
 
     @commands.slash_command()
     async def remove_shop_item(
@@ -98,11 +101,11 @@ class ShopCog(commands.Cog):
                         guild_id=inter.guild_id,
                         role_id=role.id,
                     ):
-                        await inter.response.send_message("Роль удалена из магазина сервера")
+                        await inter.response.send_message(embed=RoleWasDeletedFromShopEmbed())
                     else:
-                        await inter.response.send_message("Роль не найдена в магазине сервера")
+                        await inter.response.send_message(embed=RoleWasNotFoundInShopEmbed(), ephemeral=True)
             else:
-                await inter.response.send_message("Недостаточно прав")
+                await inter.response.send_message(embed=NotEnoughPermissionsEmbed(), ephemeral=True)
 
     @commands.slash_command()
     async def edit_shop_item(
@@ -125,7 +128,7 @@ class ShopCog(commands.Cog):
                     ):
                         if not remaining is None:
                             if remaining < 0:
-                                return await inter.response.send_message("remaining не может быть меньше нуля")
+                                await inter.response.send_message(embed=RemainingCantBeLessThanZeroEmbed(), ephemeral=True)
                             else:
                                 shop_item.remaining = remaining
 
@@ -133,13 +136,13 @@ class ShopCog(commands.Cog):
                             if price > 1:
                                 shop_item.price = price
                             else:
-                                return await inter.response.send_message("Цена должна быть больше 1 монеты")
+                                return await inter.response.send_message(embed=PriceMustBeMoreThanZeroEmbed(), ephemeral=True)
 
                         if not description is None:
                             if re.search("^[.]{0,200}$", description, re.S):
                                 shop_item.description = description
                             else:
-                                return await inter.response.send_message("Описание может быть длиной от 0 до 200 символов")
+                                return await inter.response.send_message(embed=ItemDescriptionMustIsToLongEmbed(), ephemeral=True)
 
                         if not is_infinite is None:
                             shop_item.is_infinite = is_infinite
@@ -149,11 +152,11 @@ class ShopCog(commands.Cog):
 
                         await session.commit()
 
-                        await inter.response.send_message("Роль обновлена")
+                        await inter.response.send_message(embed=ShopItemUpdatedEmbed())
                     else:
-                        await inter.response.send_message("Роль не найдена в магазине сервера")
+                        await inter.response.send_message(embed=RoleWasNotFoundInShopEmbed(), ephemeral=True)
             else:
-                await inter.response.send_message("Недостаточно прав")
+                await inter.response.send_message(embed=NotEnoughPermissionsEmbed(), ephemeral=True)
 
     @commands.slash_command()
     async def buy_shop_item(
@@ -177,10 +180,7 @@ class ShopCog(commands.Cog):
                     ):
                         await inter.response.send_message(view=ConfirmPurchaseView(user=user, shop_item=shop_item))
                 else:
-                    await inter.response.send_message(
-                        "Магазин выключен на этом сервере",
-                        ephemeral=True,
-                    )
+                    await inter.response.send_message(embed=ShopIsDisabledEmbed(), ephemeral=True)
 
 
 __all__ = ("ShopCog",)

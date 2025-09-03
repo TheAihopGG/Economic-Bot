@@ -3,6 +3,7 @@ from disnake.ui import View, button, Button
 
 from ...core.database import session_factory
 from ...core.models import User, ShopItem
+from .embeds import BotCantGiveARoleEmbed, NotEnoughMoneyToBuyRoleEmbed, RoleIsNotForSaleEmbed, RoleIsSoldOutEmbed, RoleWasNotFoundInShopEmbed, YouAlreadyHasTheRoleEmbed
 
 
 class ConfirmPurchaseView(View):
@@ -17,12 +18,12 @@ class ConfirmPurchaseView(View):
 
     @button(style=ButtonStyle.danger, label="Подтвердить")
     async def confirm_button(self, button: Button, inter: MessageInteraction) -> None:
-        if inter.author.id == self.user.discord_id:
-            async with session_factory() as session:
-                session.add(self.user)
-                session.add(self.shop_item)
-                await session.refresh(self.user)
-                await session.refresh(self.shop_item)
+        async with session_factory() as session:
+            session.add(self.user)
+            session.add(self.shop_item)
+            await session.refresh(self.user)
+            await session.refresh(self.shop_item)
+            if inter.author.id == self.user.discord_id:
                 if self.shop_item.is_for_sell:
                     if self.shop_item.remaining > 0 or self.shop_item.is_infinite:
                         if self.user.balance >= self.shop_item.price:
@@ -33,18 +34,18 @@ class ConfirmPurchaseView(View):
                                     try:
                                         await inter.author.add_roles(role)
                                     except errors.Forbidden:
-                                        await inter.response.send_message("У бота нету права на выдачу этой роли")
+                                        await inter.response.send_message(embed=BotCantGiveARoleEmbed(role), ephemeral=True)
                                         await session.rollback()
                                     else:
                                         await session.commit()
-                                        await inter.response.send_message("Вы успешно купили роль")
+                                        await inter.response.send_message(embed=YouAlreadyHasTheRoleEmbed(role), ephemeral=True)
                                 else:
-                                    await inter.response.send_message("У вас уже есть эта роль")
+                                    await inter.response.send_message(embed=YouAlreadyHasTheRoleEmbed(), ephemeral=True)
                             else:
-                                await inter.response.send_message("Роль не найдена, возможна она снята с продажи или удалена")
+                                await inter.response.send_message(embed=RoleWasNotFoundInShopEmbed(), ephemeral=True)
                         else:
-                            await inter.response.send_message("Недостаточно монет для покупки роли")
+                            await inter.response.send_message(embed=NotEnoughMoneyToBuyRoleEmbed(), ephemeral=True)
                     else:
-                        await inter.response.send_message("Все раскупили бл")
+                        await inter.response.send_message(embed=RoleIsSoldOutEmbed(), ephemeral=True)
                 else:
-                    await inter.response.send_message("Роль не продаётся")
+                    await inter.response.send_message(embed=RoleIsNotForSaleEmbed(), ephemeral=True)

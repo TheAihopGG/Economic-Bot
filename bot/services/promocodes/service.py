@@ -1,4 +1,3 @@
-from typing import AsyncGenerator
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
@@ -71,12 +70,13 @@ async def get_promocodes(
     session: AsyncSession,
     *,
     guild_id: int,
-) -> AsyncGenerator[Promocode]:
-    for promocode in (
-        await session.execute(
-            select(Promocode).where(
-                Promocode.guild_id == guild_id,
+) -> list[Promocode]:
+    return list(
+        (
+            await session.execute(
+                select(Promocode).where(
+                    Promocode.guild_id == guild_id,
+                )
             )
-        )
-    ).scalars():
-        yield promocode
+        ).scalars()
+    )

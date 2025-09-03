@@ -35,4 +35,22 @@ async def get_all_users(session: AsyncSession, *, guild_id: int) -> AsyncGenerat
         yield user
 
 
-__all__ = ("get_or_create_user_by_discord_id",)
+async def get_baltop_users(
+    session: AsyncSession,
+    *,
+    guild_id: int,
+    count: int = 10,
+) -> list[User]:
+    return list(
+        (
+            await session.execute(
+                select(User).where(User.guild_id == guild_id).order_by(User.balance).limit(count),
+            )
+        ).scalars()
+    ).reverse()
+
+
+__all__ = (
+    "get_or_create_user_by_discord_id",
+    "get_baltop_users",
+)
