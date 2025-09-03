@@ -1,6 +1,7 @@
 import re
 from disnake import AppCmdInter, Role
 from disnake.ext import commands
+from disnake.ext.commands import Param
 
 from ...services.shops import get_shop_items, add_shop_item, remove_shop_item, get_shop_item
 from ...services.users import get_or_create_user_by_discord_id
@@ -9,6 +10,7 @@ from ...core.database import session_factory
 from ...core.embeds import NotEnoughPermissionsEmbed
 from .views import ConfirmPurchaseView
 from .embeds import (
+    AreYouSureToBuyRoleEmbed,
     ItemDescriptionMustIsToLongEmbed,
     PriceMustBeMoreThanZeroEmbed,
     RemainingCantBeLessThanZeroEmbed,
@@ -23,7 +25,10 @@ from .embeds import (
 
 
 class ShopCog(commands.Cog):
-    @commands.slash_command()
+    @commands.slash_command(
+        name="shop",
+        description="Вывести список товаров",
+    )
     async def shop(self, inter: AppCmdInter, show_all: bool = False) -> None:
         if inter.guild:
             async with session_factory() as session:
@@ -55,14 +60,17 @@ class ShopCog(commands.Cog):
                     else:
                         await inter.response.send_message(embed=NotEnoughPermissionsEmbed(), ephemeral=True)
 
-    @commands.slash_command()
+    @commands.slash_command(
+        name="add_shop_item",
+        description="Добавить товар в магазин",
+    )
     async def add_shop_item(
         self,
         inter: AppCmdInter,
-        role: Role,
-        price: int,
-        remaining: int = 0,
-        is_infinite: bool = True,
+        role: Role = Param(description="Роль, которая будет продаваться"),
+        price: int = Param(description="Цена товара"),
+        remaining: int = Param(description="Количество продаж, которое может быть совершено"),
+        is_infinite: bool = Param(description="Будет ли количество продаж бесконечным"),
     ) -> None:
         if inter.guild:
             if inter.author.guild_permissions.administrator:
@@ -87,11 +95,14 @@ class ShopCog(commands.Cog):
             else:
                 await inter.response.send_message(embed=NotEnoughPermissionsEmbed(), ephemeral=True)
 
-    @commands.slash_command()
+    @commands.slash_command(
+        name="remove_shop_item",
+        description="Удаляет товар из магазина",
+    )
     async def remove_shop_item(
         self,
         inter: AppCmdInter,
-        role: Role,
+        role: Role = Param(description="Роль, которая будет удалена"),
     ) -> None:
         if inter.guild:
             if inter.author.guild_permissions.administrator:
@@ -107,16 +118,37 @@ class ShopCog(commands.Cog):
             else:
                 await inter.response.send_message(embed=NotEnoughPermissionsEmbed(), ephemeral=True)
 
-    @commands.slash_command()
+    @commands.slash_command(
+        name="edit_shop_item",
+        description="Обновляет товар в магазине",
+    )
     async def edit_shop_item(
         self,
         inter: AppCmdInter,
-        role: Role,
-        remaining: int | None = None,
-        price: int | None = None,
-        description: str | None = None,
-        is_infinite: bool | None = None,
-        is_for_sell: bool | None = None,
+        role: Role = Param(
+            description="Роль которая привязана к товару",
+            default=None,
+        ),
+        remaining: int | None = Param(
+            description="Количество продаж, которое может быть совершено",
+            default=None,
+        ),
+        price: int | None = Param(
+            description="Цена товара",
+            default=None,
+        ),
+        description: str | None = Param(
+            description="Цена товара",
+            default=None,
+        ),
+        is_infinite: bool | None = Param(
+            description="Будет ли количество продаж бесконечным",
+            default=None,
+        ),
+        is_for_sell: bool | None = Param(
+            description="Будет ли товар доступен к покупке",
+            default=None,
+        ),
     ) -> None:
         if inter.guild:
             if inter.author.guild_permissions.administrator:
@@ -158,11 +190,11 @@ class ShopCog(commands.Cog):
             else:
                 await inter.response.send_message(embed=NotEnoughPermissionsEmbed(), ephemeral=True)
 
-    @commands.slash_command()
+    @commands.slash_command(name="buy_shop_item", description="Купить товар из магазина")
     async def buy_shop_item(
         self,
         inter: AppCmdInter,
-        role: Role,
+        role: Role = Param(description="Роль которая будет куплена"),
     ) -> None:
         if inter.guild:
             async with session_factory() as session:
@@ -178,7 +210,13 @@ class ShopCog(commands.Cog):
                         guild_id=inter.guild_id,
                         role_id=role.id,
                     ):
-                        await inter.response.send_message(view=ConfirmPurchaseView(user=user, shop_item=shop_item))
+                        await inter.response.send_message(
+                            embed=AreYouSureToBuyRoleEmbed(role),
+                            view=ConfirmPurchaseView(
+                                user=user,
+                                shop_item=shop_item,
+                            ),
+                        )
                 else:
                     await inter.response.send_message(embed=ShopIsDisabledEmbed(), ephemeral=True)
 

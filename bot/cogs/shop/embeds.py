@@ -86,3 +86,8 @@ class RoleIsSoldOutEmbed(SuccessEmbed):
 class RoleIsNotForSaleEmbed(SuccessEmbed):
     def __init__(self) -> None:
         super().__init__(description=f"Роль не продаётся")
+
+
+class AreYouSureToBuyRoleEmbed(InfoEmbed):
+    def __init__(self, role: Role) -> None:
+        super().__init__(description=f"Вы уверены, что хотите купить роль {role.mention}?")
