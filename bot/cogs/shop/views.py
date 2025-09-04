@@ -3,7 +3,7 @@ from disnake.ui import View, button, Button
 
 from ...core.database import session_factory
 from ...core.models import User, ShopItem
-from .embeds import BotCantGiveARoleEmbed, NotEnoughMoneyToBuyRoleEmbed, RoleIsNotForSaleEmbed, RoleIsSoldOutEmbed, RoleWasNotFoundInShopEmbed, YouAlreadyHasTheRoleEmbed
+from .embeds import BotCantGiveARoleEmbed, NotEnoughMoneyToBuyRoleEmbed, RoleIsNotForSaleEmbed, RoleIsSoldOutEmbed, RoleWasNotFoundInShopEmbed, YouAlreadyHasTheRoleEmbed, YouBoughtARoleEmbed
 
 
 class ConfirmPurchaseView(View):
@@ -38,7 +38,7 @@ class ConfirmPurchaseView(View):
                                         await session.rollback()
                                     else:
                                         await session.commit()
-                                        await inter.response.send_message(embed=YouAlreadyHasTheRoleEmbed(role), ephemeral=True)
+                                        await inter.response.send_message(embed=YouBoughtARoleEmbed(role), ephemeral=True)
                                 else:
                                     await inter.response.send_message(embed=YouAlreadyHasTheRoleEmbed(), ephemeral=True)
                             else:

@@ -38,10 +38,13 @@ class ShopCog(commands.Cog):
                     if guild_settings.is_shop_enabled:
                         await inter.response.send_message(
                             embed=ShopEmbed(
-                                shop_items=await get_shop_items(
-                                    session,
-                                    guild_id=inter.guild_id,
-                                ),
+                                shop_items=[
+                                    shop_item
+                                    async for shop_item in get_shop_items(
+                                        session,
+                                        guild_id=inter.guild_id,
+                                    )
+                                ],
                             ),
                         )
                     else:
@@ -50,11 +53,14 @@ class ShopCog(commands.Cog):
                     if inter.author.guild_permissions.administrator:
                         await inter.response.send_message(
                             embed=ShopEmbed(
-                                shop_items=await get_shop_items(
-                                    session,
-                                    guild_id=inter.guild_id,
-                                    return_all=True,
-                                ),
+                                shop_items=[
+                                    shop_item
+                                    async for shop_item in get_shop_items(
+                                        session,
+                                        guild_id=inter.guild_id,
+                                        return_all=True,
+                                    )
+                                ],
                             ),
                         )
                     else:
@@ -112,6 +118,7 @@ class ShopCog(commands.Cog):
                         guild_id=inter.guild_id,
                         role_id=role.id,
                     ):
+                        await session.commit()
                         await inter.response.send_message(embed=RoleWasDeletedFromShopEmbed())
                     else:
                         await inter.response.send_message(embed=RoleWasNotFoundInShopEmbed(), ephemeral=True)
@@ -171,7 +178,7 @@ class ShopCog(commands.Cog):
                                 return await inter.response.send_message(embed=PriceMustBeMoreThanZeroEmbed(), ephemeral=True)
 
                         if not description is None:
-                            if re.search("^[.]{0,200}$", description, re.S):
+                            if re.search("^[\w]{0,200}$", description):
                                 shop_item.description = description
                             else:
                                 return await inter.response.send_message(embed=ItemDescriptionMustIsToLongEmbed(), ephemeral=True)
@@ -211,12 +218,17 @@ class ShopCog(commands.Cog):
                         role_id=role.id,
                     ):
                         await inter.response.send_message(
-                            embed=AreYouSureToBuyRoleEmbed(role),
+                            embed=AreYouSureToBuyRoleEmbed(
+                                role=role,
+                                price=shop_item.price,
+                            ),
                             view=ConfirmPurchaseView(
                                 user=user,
                                 shop_item=shop_item,
                             ),
                         )
+                    else:
+                        await inter.response.send_message(embed=RoleWasNotFoundInShopEmbed(), ephemeral=True)
                 else:
                     await inter.response.send_message(embed=ShopIsDisabledEmbed(), ephemeral=True)
 

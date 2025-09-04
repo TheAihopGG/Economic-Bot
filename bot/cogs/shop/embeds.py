@@ -1,4 +1,4 @@
-from typing import Iterator
+from typing import AsyncGenerator
 
 from disnake import Role
 
@@ -7,10 +7,11 @@ from ...core.models import ShopItem
 
 
 class ShopEmbed(InfoEmbed):
-    def __init__(self, shop_items: Iterator[ShopItem]):
-        super().__init__(
-            description="Список товаров:" + [f"\n<@&{shop_item.role_id}> - {shop_item.price} :coin:\n{shop_item.description}" for shop_item in shop_items],
-        )
+    def __init__(self, shop_items: list[ShopItem]):
+        if shop_items:
+            super().__init__(description="**Список товаров:**\n\n" + "\n".join([f"<@&{shop_item.role_id}> - {shop_item.price} :coin:\n{shop_item.description}" for shop_item in shop_items]))
+        else:
+            super().__init__(description="Нету товаров")
 
 
 class ShopIsDisabledEmbed(ErrorEmbed):
@@ -50,7 +51,7 @@ class RoleWasNotFoundInShopEmbed(ErrorEmbed):
 
 class ItemDescriptionMustIsToLongEmbed(ErrorEmbed):
     def __init__(self) -> None:
-        super().__init__(description="Описание может быть длиной от 0 до 200 символов.")
+        super().__init__(description="Описание может быть длиной от 1 до 200 символов.")
 
 
 class ShopItemUpdatedEmbed(SuccessEmbed):
@@ -68,26 +69,35 @@ class YouAlreadyHasTheRoleEmbed(SuccessEmbed):
         super().__init__(description=f"Вы купили роль {role.mention}")
 
 
-class YouAlreadyHasTheRoleEmbed(SuccessEmbed):
+class YouAlreadyHasTheRoleEmbed(ErrorEmbed):
     def __init__(self) -> None:
         super().__init__(description=f"У вас уже есть эта роль")
 
 
-class NotEnoughMoneyToBuyRoleEmbed(SuccessEmbed):
+class NotEnoughMoneyToBuyRoleEmbed(ErrorEmbed):
     def __init__(self) -> None:
         super().__init__(description=f"У вас недостаточно монет чтобы купить эту роль")
 
 
-class RoleIsSoldOutEmbed(SuccessEmbed):
+class RoleIsSoldOutEmbed(ErrorEmbed):
     def __init__(self) -> None:
         super().__init__(description=f"Роль раскуплена")
 
 
-class RoleIsNotForSaleEmbed(SuccessEmbed):
+class RoleIsNotForSaleEmbed(ErrorEmbed):
     def __init__(self) -> None:
         super().__init__(description=f"Роль не продаётся")
 
 
 class AreYouSureToBuyRoleEmbed(InfoEmbed):
+    def __init__(
+        self,
+        role: Role,
+        price: int,
+    ) -> None:
+        super().__init__(description=f"Вы уверены, что хотите купить роль {role.mention} за {price} :coin:?")
+
+
+class YouBoughtARoleEmbed(SuccessEmbed):
     def __init__(self, role: Role) -> None:
-        super().__init__(description=f"Вы уверены, что хотите купить роль {role.mention}?")
+        super().__init__(description=f"Вы купили роль {role.mention}")
