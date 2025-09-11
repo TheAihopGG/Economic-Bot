@@ -56,7 +56,7 @@ class BalTopEmbed(InfoEmbed):
                     place = ":second_place"
                 case 3:
                     place = ":third_place"
-            self.add_field(f"{place}. <@{user.discord_id}>", f"{user.balance} монет", inline=False)
+            self.add_field(f"{place}.", f"<@{user.id}>\n{user.balance} монет", inline=False)
 
 
 class YouSuccessfullyAwardedMoneyEmbed(SuccessEmbed):
