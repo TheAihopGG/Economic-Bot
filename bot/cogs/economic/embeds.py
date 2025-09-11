@@ -48,7 +48,7 @@ class YouGotRewardEmbed(SuccessEmbed):
 class BalTopEmbed(InfoEmbed):
     def __init__(self, baltop: list[User]):
         super().__init__(description="Топ баланса:")
-        for [place, user] in enumerate(baltop):
+        for [place, user] in enumerate(baltop, start=1):
             match place:
                 case 1:
                     place = ":first_place:"
