@@ -41,13 +41,15 @@ async def get_baltop_users(
     guild_id: int,
     count: int = 10,
 ) -> list[User]:
-    return list(
+    baltop = list(
         (
             await session.execute(
                 select(User).where(User.guild_id == guild_id).order_by(User.balance).limit(count),
             )
         ).scalars()
-    ).reverse()
+    )
+    baltop.reverse()
+    return baltop
 
 
 __all__ = (
