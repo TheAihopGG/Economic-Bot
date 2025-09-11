@@ -17,17 +17,17 @@ class YouCantPayYourselfEmbed(ErrorEmbed):
 
 class YouCantPayLessThanEmbed(ErrorEmbed):
     def __init__(self, less_than: int = 5):
-        super().__init__(description=f"Вы не можете перевести меньше {less_than} монет.")
+        super().__init__(description=f"Вы не можете перевести меньше {less_than} :coin:.")
 
 
 class YouSuccessfullyPaidEmbed(SuccessEmbed):
     def __init__(self, amount: int, to: Member):
-        super().__init__(description=f"Вы успешно перевели {amount} монет участнику {to.mention}.")
+        super().__init__(description=f"Вы успешно перевели {amount} :coin: участнику {to.mention}.")
 
 
 class YourBalanceEmbed(InfoEmbed):
     def __init__(self, balance: int):
-        super().__init__(description=f"У вас {balance} монет.")
+        super().__init__(description=f"У вас {balance} :coin:.")
 
 
 class RewardsIsDisabledOnGuildEmbed(ErrorEmbed):
@@ -42,7 +42,7 @@ class YouAlreadyGotRewardNextInEmbed(ErrorEmbed):
 
 class YouGotRewardEmbed(SuccessEmbed):
     def __init__(self, amount: str, reward_delay: timedelta):
-        super().__init__(description=f"Вы получили награду: {amount} монет. Вы сможете ещё раз получить награду через <t:{int((datetime.today() + reward_delay).timestamp())}:R>")
+        super().__init__(description=f"Вы получили награду: {amount} :coin:. Вы сможете ещё раз получить награду через <t:{int((datetime.today() + reward_delay).timestamp())}:R>")
 
 
 class BalTopEmbed(InfoEmbed):
@@ -56,9 +56,9 @@ class BalTopEmbed(InfoEmbed):
                     place = ":second_place"
                 case 3:
                     place = ":third_place"
-            self.add_field(f"{place}.", f"<@{user.id}>\n{user.balance} монет", inline=False)
+            self.add_field(f"{place}.", f"<@{user.id}>\n{user.balance} :coin:", inline=False)
 
 
 class YouSuccessfullyAwardedMoneyEmbed(SuccessEmbed):
     def __init__(self, amount: int, to: Member):
-        super().__init__(description=f"Вы успешно выдали {amount} монет участнику {to.mention}.")
+        super().__init__(description=f"Вы успешно выдали {amount} :coin: участнику {to.mention}.")

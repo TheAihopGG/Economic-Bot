@@ -76,7 +76,7 @@ class YouAlreadyHasTheRoleEmbed(ErrorEmbed):
 
 class NotEnoughMoneyToBuyRoleEmbed(ErrorEmbed):
     def __init__(self) -> None:
-        super().__init__(description=f"У вас недостаточно монет чтобы купить эту роль")
+        super().__init__(description=f"У вас недостаточно :coin: чтобы купить эту роль")
 
 
 class RoleIsSoldOutEmbed(ErrorEmbed):
