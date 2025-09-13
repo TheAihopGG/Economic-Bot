@@ -4,4 +4,4 @@ services:
       dockerfile: ./Dockerfile
       context: ./
     volumes:
-      - ./bot/databases:/supports_bot/bot/databases
+      - ./bot/databases:/economic_bot/bot/databases
